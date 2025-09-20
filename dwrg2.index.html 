@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>第五人格随机角色抽取</title>
+    <meta name="theme-color" content="#2196F3">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 25px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            background: linear-gradient(to right, #ff8a00, #da1b60);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .result-box {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .result {
+            font-size: 26px;
+            font-weight: bold;
+            margin: 15px 0;
+            padding: 12px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        #survivorResult {
+            color: #4CAF50;
+        }
+        #hunterResult {
+            color: #F44336;
+        }
+        button {
+            background: linear-gradient(to right, #2196F3, #21CBF3);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 16px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 15px 0;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+            transition: all 0.3s;
+        }
+        button:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.4);
+        }
+        .share-section {
+            margin: 25px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        /* 手机震动效果 */
+        @keyframes shake {
+            0%, 100% {transform: translateX(0);}
+            20%, 60% {transform: translateX(-5px);}
+            40%, 80% {transform: translateX(5px);}
+        }
+        .shake {
+            animation: shake 0.5s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>第五人格随机角色抽取</h1>
+        
+        <div class="result-box">
+            <p>求生者：</p>
+            <div class="result" id="survivorResult">等待抽取</div>
+            
+            <p>监管者：</p>
+            <div class="result" id="hunterResult">等待抽取</div>
+        </div>
+        
+        <button onclick="drawCharacters()">随机抽取角色</button>
+        
+        <div class="share-section">
+            <p>分享链接：<span id="pageUrl"></span></p>
+            <p>复制链接分享给好友</p>
+        </div>
+        
+        <p class="footer">当前版本: 2025.9.20 | 共85个角色</p>
+    </div>
+
+    <script>
+        // 角色数据
+        const survivors = [
+            "幸运儿", "医生", "律师", "慈善家", "园丁", "魔术师", "冒险家", "佣兵", 
+            "空军", "机械师", "前锋", "盲女", "祭司", "调香师", "牛仔", "舞女", 
+            "先知", "入殓师", "勘探员", "咒术师", "野人", "杂技演员", "大副", "调酒师", 
+            "邮差", "守墓人", "囚徒", "昆虫学者", "画家", "击球手", "玩具商", 
+            "心理学家", "病患", "小说家", "小女孩", "哭泣小丑", "教授", "古董商", 
+            "作曲家", "记者", "飞行家", "拉拉队员", "木偶师", "火灾调查员", "法罗女士", 
+            "骑士", "气象学家", "弓箭手", "逃脱大师", "爱丽丝·德罗斯", "奥尔菲斯"
+        ];
+
+        const hunters = [
+            "厂长", "小丑", "鹿头", "杰克", "蜘蛛", "红蝶", "黄衣之主", "宿伞之魂", 
+            "摄影师", "疯眼", "梦之女巫", "爱哭鬼", "孽蜥", "红夫人", "26号守卫", 
+            "使徒", "小提琴家", "雕刻家", "博士", "破轮", "渔女", "蜡像师", 
+            "噩梦", "记录员", "隐士", "守夜人", "歌剧演员", "愚人金", "时空之影", 
+            "跛脚羊", "喧嚣", "杂货商", "台球手"
+        ];
+
+        // 抽取角色函数
+        function drawCharacters() {
+            // 添加震动效果
+            document.getElementById('survivorResult').classList.add('shake');
+            document.getElementById('hunterResult').classList.add('shake');
+            
+            setTimeout(() => {
+                // 随机选择角色
+                const survivorIndex = Math.floor(Math.random() * survivors.length);
+                const hunterIndex = Math.floor(Math.random() * hunters.length);
+                
+                // 更新显示
+                document.getElementById('survivorResult').textContent = survivors[survivorIndex];
+                document.getElementById('hunterResult').textContent = hunters[hunterIndex];
+                
+                // 移除震动效果
+                document.getElementById('survivorResult').classList.remove('shake');
+                document.getElementById('hunterResult').classList.remove('shake');
+                
+                // 尝试触发手机震动（需要用户授权）
+                if ('vibrate' in navigator) {
+                    navigator.vibrate([100, 50, 100]);
+                }
+            }, 500);
+        }
+
+        // 页面加载完成后显示当前URL
+        window.onload = function() {
+            // 显示当前页面URL
+            document.getElementById('pageUrl').textContent = window.location.href;
+            
+            // 首次加载时显示提示
+            document.getElementById('survivorResult').textContent = "点击按钮开始";
+            document.getElementById('hunterResult').textContent = "点击按钮开始";
+        };
+    </script>
+</body>
+</html>
